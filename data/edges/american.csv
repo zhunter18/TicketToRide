@@ -1,0 +1,31 @@
+source,destination,weight,isTunnel,ferryCount,color
+New York,Boston,2,false,0,RED
+Boston,Montreal,3,true,0,
+New York,Pittsburgh,2,false,0,BLUE
+Pittsburgh,Chicago,3,false,0,GREEN
+Chicago,Omaha,4,false,0,YELLOW
+Washington,Raleigh,2,false,0,BLACK
+Raleigh,Atlanta,2,false,0,WHITE
+Atlanta,Miami,5,false,0,
+New Orleans,Houston,2,false,0,PINK
+Houston,Dallas,1,false,0,ORANGE
+Dallas,El Paso,4,false,0,PURPLE
+El Paso,Phoenix,3,false,0,MULTICOLOR
+Phoenix,Los Angeles,3,false,0,RED
+Los Angeles,San Francisco,3,false,0,BLUE
+San Francisco,Portland,5,false,0,
+Portland,Seattle,1,false,0,GREEN
+Seattle,Calgary,4,false,0,YELLOW
+Calgary,Winnipeg,6,false,0,BLACK
+Denver,Helena,4,false,0,WHITE
+Helena,Seattle,6,false,0,
+Kansas City,Denver,4,false,0,PINK
+Saint Louis,Kansas City,2,false,0,ORANGE
+Nashville,Atlanta,1,false,0,PURPLE
+Little Rock,Nashville,3,false,0,MULTICOLOR
+Oklahoma City,Little Rock,2,false,0,RED
+Santa Fe,El Paso,2,false,0,BLUE
+Salt Lake City,Denver,3,false,0,GREEN
+Duluth,Omaha,2,false,0,YELLOW
+Sault Ste. Marie,Duluth,3,false,0,
+
