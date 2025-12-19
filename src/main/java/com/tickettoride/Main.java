@@ -7,7 +7,9 @@ import java.util.Scanner;
  * Main entry point for the Ticket to Ride game
  */
 public class Main {
-    public static void main(String[] args) {
+
+    private Game game;
+    public void main(String[] args) {
         System.out.println("Welcome to Ticket to Ride!");
 
         Scanner scnr = new Scanner(System.in);
@@ -33,10 +35,29 @@ public class Main {
             }
         }
 
-        GameMap gameMap = new GameMap();
+        GameMap gameBoard = new GameMap();
+        game = new Game(players, gameBoard);
 
-        // Game game = new Game();
+        System.out.println("Game initialized with " + players + " players and game board.");
         
+
+        Player[] allPlayers = new Player[players];
+        for (int i = 1; i <= players; i++) {
+            validInput = false;
+            System.out.println("Please enter the name of player" + i + ": ");
+            while (!validInput) {
+            String playerName = scnr.nextLine();
+            for (Player a: allPlayers) {
+                if (a.getPlayerId().equals(playerName)) {
+                    System.out.println("Player name already exists. Please enter a different name.");
+                    validInput = false;
+                }
+            }
+            Player player = new Player(playerName);
+            player.setGameMap(gameBoard);
+            allPlayers[i-1] = player;
+        }
+
     }
 }
 

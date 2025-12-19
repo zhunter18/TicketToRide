@@ -42,12 +42,12 @@ public class DestinationDeck extends Deck {
         }
     }
 
-    public DestinationCard[] drawDestinations(String playerId) {
-        DestinationCard[] choices = new DestinationCard[3];
+    public DestinationCard[] drawDestinations(String playerId,int numCards) {
+        DestinationCard[] choices = new DestinationCard[numCards];
         if (cards.isEmpty()) {
             throw new IllegalStateException("Deck is empty");
         }
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < numCards; i++) {
             choices[i] = (DestinationCard) cards.removeFirst();
             choices[i].setLocation("HAND", playerId);
         }

@@ -54,8 +54,8 @@ public class ColorDeck extends Deck {
         }
     }
 
-    public Card drawMystery(String playerId) {
-        Card temp = cards.removeFirst();
+    public ColorCard drawMystery(String playerId) {
+        ColorCard temp = (ColorCard) cards.removeFirst();
         temp.setLocation("HAND", playerId);
 
         if (cards.size() <= 20) { // Boolean to make sure the deck is shuffled when it is less than 20 cards

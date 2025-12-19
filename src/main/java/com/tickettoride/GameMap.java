@@ -97,16 +97,12 @@ public class GameMap {
                 return claimedBy;
             }
 
-            public boolean isClaimed() {
-                return claimedBy != null;
-            }
-
             /**
              * Claim the edge for a player
              * Throws exception if edge is already claimed
              */
             public void claim(String playerIdentifier) {
-                if (isClaimed()) {
+                if (getClaimedBy() != null) {
                     throw new IllegalStateException("Route already claimed by " + claimedBy);
                 }
                 if (playerIdentifier == null || playerIdentifier.trim().isEmpty()) {
@@ -116,18 +112,10 @@ public class GameMap {
             }
 
             /**
-             * Unclaim the edge (make it available again)
+             * Unclaim the edge (make it available again), WILL NEVER BE USED
              */
             public void unclaim() {
                 this.claimedBy = null;
-            }
-
-            /**
-             * Set claimedBy directly (use claim() method instead for validation)
-             * This method is kept for backward compatibility but should use claim() instead
-             */
-            public void setClaimedBy(String claimedBy) {
-                this.claimedBy = claimedBy;
             }
         }
 
@@ -216,6 +204,34 @@ public class GameMap {
             }
             
             return successCount;
+        }
+
+        /**
+         * Get an edge between two cities (checks both directions)
+         * @return Edge if found, null otherwise
+         */
+        protected Edge getEdge(String source, String destination) {
+            source = source.trim().toLowerCase();
+            destination = destination.trim().toLowerCase();
+            
+            List<Edge> edges = adjacencyList.get(source);
+            if (edges != null) {
+                for (Edge edge : edges) {
+                    if (edge.getDestination().equals(destination)) {
+                        return edge;
+                    }
+                }
+            }
+            // Check reverse direction (undirected graph)
+            edges = adjacencyList.get(destination);
+            if (edges != null) {
+                for (Edge edge : edges) {
+                    if (edge.getDestination().equals(source)) {
+                        return edge;
+                    }
+                }
+            }
+            return null;
         }
 
         /**
@@ -364,5 +380,128 @@ public class GameMap {
         System.out.println("GameMap initialized successfully!");
     }
     
-    
+    // ============ Public Route Accessor Methods ============
+
+    /**
+     * Check if a route exists between two cities
+     */
+    public boolean routeExists(String city1, String city2) {
+        return map.getEdge(city1, city2) != null;
+    }
+
+    /**
+     * Get who owns a route (null if unclaimed or doesn't exist)
+     * Use this for both checking availability and getting owner
+     */
+    public String getRouteOwner(String city1, String city2) {
+        WeightedGraph.Edge edge = map.getEdge(city1, city2);
+        return edge != null ? edge.getClaimedBy() : null;
+    }
+
+    /**
+     * Get the weight (train cost) of a route, -1 if not found
+     */
+    public int getRouteWeight(String city1, String city2) {
+        WeightedGraph.Edge edge = map.getEdge(city1, city2);
+        return edge != null ? edge.getWeight() : -1;
+    }
+
+    /**
+     * Get the color of a route (null if multicolor or doesn't exist)
+     */
+    public Color getRouteColor(String city1, String city2) {
+        WeightedGraph.Edge edge = map.getEdge(city1, city2);
+        return edge != null ? edge.getColor() : null;
+    }
+
+    /**
+     * Check if a route is a tunnel
+     */
+    public boolean isRouteTunnel(String city1, String city2) {
+        WeightedGraph.Edge edge = map.getEdge(city1, city2);
+        return edge != null && edge.isTunnel();
+    }
+
+    /**
+     * Get the ferry count for a route, -1 if not found
+     */
+    public int getRouteFerryCount(String city1, String city2) {
+        WeightedGraph.Edge edge = map.getEdge(city1, city2);
+        return edge != null ? edge.getFerryCount() : -1;
+    }
+
+    /**
+     * Claim a route for a player
+     * @return true if successful, false if route doesn't exist or is already claimed
+     */
+    public boolean claimRoute(String city1, String city2, String playerId) {
+        WeightedGraph.Edge edge = map.getEdge(city1, city2);
+        if (edge == null || edge.getClaimedBy() != null) {
+            return false;
+        }
+        edge.claim(playerId);
+        return true;
+    }
+
+    public int getRoutePoints(String city1, String city2) {
+        WeightedGraph.Edge edge = map.getEdge(city1, city2);
+        if (edge == null) {
+            return 0;
+        }
+        int weight = edge.getWeight();
+
+        switch (weight) {
+            case 1: return 1;
+            case 2: return 2;
+            case 3: return 4;
+            case 4: return 7;
+            case 5: return 10;
+            case 6: return 15;
+            case 8: return 23; //Double check Europe board for point total
+            default: return 0;
+        }
+    }
+
+    /**
+     * Check if a destination card is completed (path exists between cities using player's routes)
+     */
+    public boolean destinationCardCompleted(String city1, String city2, String playerId) {
+        if (!(map.hasCity(city1.toLowerCase()) && map.hasCity(city2.toLowerCase()))) {
+            return false;
+        }
+        
+        // Use a visited set to prevent infinite loops
+        Set<String> visited = new HashSet<>();
+        return findPath(city1.toLowerCase(), city2.toLowerCase(), playerId, visited);
+    }
+
+    /**
+     * Recursive helper to find a path between two cities using only player's claimed routes
+     */
+    private boolean findPath(String current, String destination, String playerId, Set<String> visited) {
+        if (current.equals(destination)) {
+            return true;
+        }
+        
+        visited.add(current);
+        
+        // Get all edges from current city
+        List<WeightedGraph.Edge> edges = map.adjacencyList.get(current);
+        if (edges == null) {
+            return false;
+        }
+        
+        for (WeightedGraph.Edge edge : edges) {
+            String nextCity = edge.getDestination();
+            
+            // Only traverse edges claimed by this player and not yet visited
+            if (playerId.equals(edge.getClaimedBy()) && !visited.contains(nextCity)) {
+                if (findPath(nextCity, destination, playerId, visited)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
 }
