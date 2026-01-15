@@ -9,7 +9,7 @@ Raleigh,Atlanta,2,false,0,WHITE
 Atlanta,Miami,5,false,0,
 New Orleans,Houston,2,false,0,PINK
 Houston,Dallas,1,false,0,ORANGE
-Dallas,El Paso,4,false,0,PURPLE
+Dallas,El Paso,4,false,0,PINK
 El Paso,Phoenix,3,false,0,MULTICOLOR
 Phoenix,Los Angeles,3,false,0,RED
 Los Angeles,San Francisco,3,false,0,BLUE
@@ -21,7 +21,7 @@ Denver,Helena,4,false,0,WHITE
 Helena,Seattle,6,false,0,
 Kansas City,Denver,4,false,0,PINK
 Saint Louis,Kansas City,2,false,0,ORANGE
-Nashville,Atlanta,1,false,0,PURPLE
+Nashville,Atlanta,1,false,0,PINK
 Little Rock,Nashville,3,false,0,MULTICOLOR
 Oklahoma City,Little Rock,2,false,0,RED
 Santa Fe,El Paso,2,false,0,BLUE

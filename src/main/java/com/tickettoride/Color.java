@@ -1,7 +1,7 @@
 package com.tickettoride;
 
 public enum Color {
-    RED, BLUE, GREEN, YELLOW, BLACK, WHITE, PINK, ORANGE, PURPLE, MULTICOLOR;
+    RED, BLUE, GREEN, YELLOW, BLACK, WHITE, PINK, ORANGE, MULTICOLOR;
 
     @Override
     public String toString() {

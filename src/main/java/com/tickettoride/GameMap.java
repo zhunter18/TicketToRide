@@ -10,7 +10,6 @@ import java.util.Scanner;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import com.tickettoride.Color; // Not necessary, but good practice
 
 /**
  * GameMap class - handles the map implementation for Ticket to Ride
@@ -285,7 +284,7 @@ public class GameMap {
                             try {
                                 color = Color.valueOf(colorStr.toUpperCase());
                             } catch (IllegalArgumentException e) {
-                                System.out.println("Error on line " + lineNumber + ": Invalid color '" + colorStr + "'. Valid colors: RED, BLUE, GREEN, YELLOW, BLACK, WHITE, PINK, ORANGE, PURPLE, MULTICOLOR (or empty for multicolor)");
+                                System.out.println("Error on line " + lineNumber + ": Invalid color '" + colorStr + "'. Valid colors: RED, BLUE, GREEN, YELLOW, BLACK, WHITE, PINK, ORANGE, MULTICOLOR (or empty for multicolor)");
                                 continue;
                             }
                         }
@@ -311,73 +310,80 @@ public class GameMap {
     }
 
     private WeightedGraph map;
+    private ColorDeck colorDeck;
+    private DestinationDeck destinationDeck;
 
+    /**
+     * Default constructor - creates empty GameMap.
+     * Use loadFromFiles() to load map data.
+     */
     public GameMap() {
         map = new WeightedGraph();
-        Scanner scanner = new Scanner(System.in);
+    }
 
-        // Retry loop for city file
-        String cityFilePath = null;
-        boolean cityFileValid = false;
-        while (!cityFileValid) {
-            System.out.print("Please enter the name of the city file (or 'quit' to exit): ");
-            String input = scanner.nextLine().trim();
-            
-            if (input.equalsIgnoreCase("quit") || input.equalsIgnoreCase("exit")) {
-                System.out.println("Exiting GameMap initialization...");
-                scanner.close();
-                return;
-            }
-            
-            if (input.isEmpty()) {
-                System.out.println("File name cannot be empty. Please try again.");
-                continue;
-            }
-            
-            cityFilePath = "data/cities/" + input;
-            int citiesLoaded = map.loadCitiesFromFile(cityFilePath);
-            
-            if (citiesLoaded > 0) {
-                cityFileValid = true;
-                System.out.println("Successfully loaded " + citiesLoaded + " cities from " + cityFilePath);
-            } else {
-                System.out.println("No cities were loaded. Please check the file path and try again.");
-                System.out.println("(Make sure the file exists and contains valid city names)");
-            }
-        }
+    /**
+     * Constructor that loads map data from files.
+     * @param cityFilePath Path to the city file (relative to project root or absolute path)
+     * @param edgeFilePath Path to the edge file (relative to project root or absolute path)
+     */
+    public GameMap(String cityFilePath, String edgeFilePath) {
+        map = new WeightedGraph();
+        loadFromFiles(cityFilePath, edgeFilePath);
+    }
 
-        // Retry loop for edge file
-        String edgeFilePath = null;
-        boolean edgeFileValid = false;
-        while (!edgeFileValid) {
-            System.out.print("Please enter the name of the edge file (or 'quit' to exit): ");
-            String input = scanner.nextLine().trim();
-            
-            if (input.equalsIgnoreCase("quit") || input.equalsIgnoreCase("exit")) {
-                System.out.println("Exiting GameMap initialization...");
-                scanner.close();
-                return;
-            }
-            
-            if (input.isEmpty()) {
-                System.out.println("File name cannot be empty. Please try again.");
-                continue;
-            }
-            
-            edgeFilePath = "data/edges/" + input;
-            int edgesLoaded = map.loadEdgesFromFile(edgeFilePath);
-            
-            if (edgesLoaded > 0) {
-                edgeFileValid = true;
-                System.out.println("Successfully loaded " + edgesLoaded + " edges from " + edgeFilePath);
-            } else {
-                System.out.println("No edges were loaded. Please check the file path and try again.");
-                System.out.println("(Make sure the file exists and contains valid edge data)");
-            }
-        }
+    /**
+     * Loads map data from city and edge files.
+     * Game class should handle prompting user for file names and call this method.
+     * @param cityFilePath Path to the city file
+     * @param edgeFilePath Path to the edge file
+     * @return true if both files loaded successfully, false otherwise
+     */
+    public boolean loadFromFiles(String cityFilePath, String edgeFilePath) {
+        int citiesLoaded = map.loadCitiesFromFile(cityFilePath);
+        int edgesLoaded = map.loadEdgesFromFile(edgeFilePath);
+        return citiesLoaded > 0 && edgesLoaded > 0;
+    }
 
-        scanner.close();
-        System.out.println("GameMap initialized successfully!");
+    /**
+     * Gets the number of cities loaded in the map
+     * @return number of cities
+     */
+    public int getCityCount() {
+        return map.cities.size();
+    }
+
+    // ============ Deck Accessor Methods ============
+
+    /**
+     * Sets the color deck for the game
+     * @param colorDeck The color deck to use
+     */
+    public void setColorDeck(ColorDeck colorDeck) {
+        this.colorDeck = colorDeck;
+    }
+
+    /**
+     * Gets the color deck
+     * @return The color deck
+     */
+    public ColorDeck getColorDeck() {
+        return colorDeck;
+    }
+
+    /**
+     * Sets the destination deck for the game
+     * @param destinationDeck The destination deck to use
+     */
+    public void setDestinationDeck(DestinationDeck destinationDeck) {
+        this.destinationDeck = destinationDeck;
+    }
+
+    /**
+     * Gets the destination deck
+     * @return The destination deck
+     */
+    public DestinationDeck getDestinationDeck() {
+        return destinationDeck;
     }
     
     // ============ Public Route Accessor Methods ============

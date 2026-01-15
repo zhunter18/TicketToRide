@@ -3,7 +3,6 @@ package com.tickettoride;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.Scanner;
 
 public class Player {
 
@@ -14,8 +13,6 @@ public class Player {
     private Hashtable<Color, List<ColorCard>> hand;
     private List<DestinationCard> destinations;
     private GameMap gameMap;
-    private ColorDeck colorDeck;
-    private DestinationDeck destinationDeck;
 
 
     public Player(String playerId) {
@@ -47,86 +44,83 @@ public class Player {
         return trains;
     }
 
-
-
     /**
-     * Draws 3 destination cards from the destination deck and allows the player to choose one
+     * Gets the player's hand organized by color
+     * @return Hashtable mapping Color to List of ColorCards
      */
-    public void drawDestinationCards() {
-        Scanner scnr = new Scanner(System.in);
-        DestinationCard[] cards = destinationDeck.drawDestinations(playerId,3);
-        
-        // Will be implemented by clicking the cards in the GUI
-        System.out.println("Pick one of the three destination cards:");
-
-        boolean isValid = false;
-        while (scnr.hasNext() && !isValid) {
-            try {
-                isValid = false;
-                int choice = Integer.parseInt(scnr.next());
-                if (choice >= 1 && choice <= 3) {
-                    isValid = true;
-
-                    for (int i = 1; i <= 3; i++) {
-                        if (i != choice) {
-                            cards[i-1].setLocation("DISCARD");
-                            destinationDeck.discardPile.add(cards[i-1]);
-                            cards[i-1] = null;
-                        }
-                        else {
-                            destinations.add(cards[i-1]); // i == choice
-                            cards[i-1] = null;
-                        }
-                    }
-
-                }
-                else {
-                    System.out.println("Invalid input, please enter an integer between 1 and 3");
-                }
-
-            }
-            catch (NumberFormatException e) {
-                System.out.println("Invalid input, please enter an integer between 1 and 3");
-            }
-        }
+    public Hashtable<Color, List<ColorCard>> getHand() {
+        return hand;
     }
 
-    public void drawColorCard() {
-        Scanner scnr = new Scanner(System.in);
-        
-        // First validity check: M or V
-        String choice = "";
-        boolean validChoice = false;
-        while (!validChoice) {
-            System.out.print("Please type \"M\" for mystery or \"V\" for visible: ");
-            choice = scnr.next().toUpperCase();
-            validChoice = choice.equals("M") || choice.equals("V");
-            if (!validChoice) {
-                System.out.println("Invalid input. Please enter M or V.");
-            }
+    /**
+     * Gets the list of destination cards the player has
+     * @return List of DestinationCards
+     */
+    public List<DestinationCard> getDestinationCards() {
+        return destinations;
+    }
+
+    /**
+     * Draws 3 destination cards from the destination deck.
+     * Game class should prompt user for choice and call selectDestinationCard()
+     * @return Array of 3 destination cards for the player to choose from
+     */
+    public DestinationCard[] drawDestinationCards() {
+        return gameMap.getDestinationDeck().drawDestinations(playerId, 3);
+    }
+
+    /**
+     * Selects one destination card from the 3 drawn cards.
+     * The selected card is added to player's destinations, others are discarded.
+     * @param cards Array of 3 destination cards (from drawDestinationCards())
+     * @param choice Player's choice (1-3, where 1 is first card, 2 is second, 3 is third)
+     * @return true if selection was successful, false if invalid choice
+     */
+    public boolean selectDestinationCard(DestinationCard[] cards, int choice) {
+        if (choice < 1 || choice > 3) {
+            return false;
         }
-        
-        ColorCard card;
-        if (choice.equals("M")) {
-            card = colorDeck.drawMystery(playerId);
-        } 
-        else {
-            // Second validity check: index 1-5
-            int index = -1;
-            boolean validIndex = false;
-            while (!validIndex) {
-                System.out.print("Please enter the index of the card (1-5) you want to draw: ");
-                try {
-                    index = Integer.parseInt(scnr.next());
-                    validIndex = index >= 1 && index <= 5;
-                    if (!validIndex) {
-                        System.out.println("Invalid input. Please enter a number between 1 and 5.");
-                    }
-                } catch (NumberFormatException e) {
-                    System.out.println("Invalid input. Please enter a number between 1 and 5.");
+        if (cards == null || cards.length != 3) {
+            return false;
+        }
+
+        for (int i = 0; i < 3; i++) {
+            if (i == choice - 1) {
+                // Selected card - add to destinations
+                destinations.add(cards[i]);
+            } else {
+                // Other cards - discard
+                if (cards[i] != null) {
+                    cards[i].setLocation("DISCARD");
+                    gameMap.getDestinationDeck().discardPile.add(cards[i]);
                 }
             }
-            card = (ColorCard) colorDeck.drawVisible(index - 1, this.playerId); // Convert to 0-based index
+        }
+        return true;
+    }
+
+    /**
+     * Draws a color card based on player's choice.
+     * Game class should prompt user and call this method with their choice.
+     * @param isMystery true to draw from mystery deck, false to draw visible card
+     * @param visibleIndex index of visible card to draw (0-4), only used if isMystery is false
+     * @return The drawn ColorCard, or null if invalid parameters
+     */
+    public ColorCard drawColorCard(boolean isMystery, int visibleIndex) {
+        ColorCard card;
+        
+        if (isMystery) {
+            card = gameMap.getColorDeck().drawMystery(playerId);
+        } else {
+            // Validate visible index
+            if (visibleIndex < 0 || visibleIndex >= 5) {
+                return null;
+            }
+            card = (ColorCard) gameMap.getColorDeck().drawVisible(visibleIndex, this.playerId);
+        }
+        
+        if (card == null) {
+            return null;
         }
         
         // Add card to hand
@@ -135,6 +129,8 @@ public class Player {
             hand.put(cardColor, new ArrayList<>());
         }
         hand.get(cardColor).add(card);
+        
+        return card;
     }
 
     /**
@@ -219,82 +215,59 @@ public class Player {
 
         // Add played cards to discard pile
         for (ColorCard card : played) {
-            colorDeck.discardPile.add(card);
+            gameMap.getColorDeck().discardPile.add(card);
         }
 
         return played;
     }
 
-    /**
-     * Handle tunnel extra cost - draw 3 cards and count matches
-     * @return number of extra cards needed
-     */
-    public int handleTunnelDraw(Color routeColor) {
-        int extraCost = 0;
-        for (int i = 0; i < 3; i++) {
-            ColorCard drawn = (ColorCard) colorDeck.drawMystery(playerId);
-            drawn.setLocation("DISCARD");
-            colorDeck.discardPile.add(drawn);
-            
-            if (drawn.getColor() == routeColor || drawn.getColor() == Color.MULTICOLOR) {
-                extraCost++;
-            }
-        }
-        return extraCost;
-    }
-
+    
     /**
      * Build a route between two cities
      * @param city1 First city
      * @param city2 Second city
      * @param colorChoice The color to use (required for gray routes, must match for colored routes)
-     * @return true if route was successfully built
+     * @param extraTunnelCost Extra cost from tunnel drawing (0 if not a tunnel)
+     * @return RouteBuildResult containing success status, error message (if failed), points earned, and trains remaining
      */
-    public boolean buildRoute(String city1, String city2, Color colorChoice) {
+    public RouteBuildResult buildRoute(String city1, String city2, Color colorChoice, int extraTunnelCost) {
         // Validate route exists and is available
         if (!gameMap.routeExists(city1, city2)) {
-            System.out.println("Route does not exist");
-            return false;
+            return new RouteBuildResult(false, "Route does not exist", 0, trains, 0);
         }
         if (gameMap.getRouteOwner(city1, city2) != null) {
-            System.out.println("Route is already claimed");
-            return false;
+            return new RouteBuildResult(false, "Route is already claimed", 0, trains, 0);
         }
 
         int cost = gameMap.getRouteWeight(city1, city2);
         int ferryCount = gameMap.getRouteFerryCount(city1, city2);
-        boolean isTunnel = gameMap.isRouteTunnel(city1, city2);
         Color routeColor = gameMap.getRouteColor(city1, city2);
         int pointsEarned = gameMap.getRoutePoints(city1, city2);
 
         // Validate color choice
         if (routeColor != null && colorChoice != routeColor && colorChoice != Color.MULTICOLOR) {
-            System.out.println("Must use " + routeColor.toDisplayString() + " cards for this route");
-            return false;
+            return new RouteBuildResult(false, "Must use " + routeColor.toDisplayString() + " cards for this route", 0, trains, 0);
         }
 
         // For gray routes, use the player's chosen color
         Color colorToUse = (routeColor == null) ? colorChoice : routeColor;
         
-        // Handle tunnel - may increase cost
-        int totalCost = cost;
-        if (isTunnel) {
-            System.out.println("This is a tunnel! Drawing 3 cards...");
-            int extraCost = handleTunnelDraw(colorToUse);
-            totalCost = cost + extraCost;
-            System.out.println("Extra cost: " + extraCost + " cards. Total: " + totalCost);
-
-            // Check if player can still afford
-            if (!canAffordRoute(colorToUse, totalCost, ferryCount)) {
-                System.out.println("Cannot afford tunnel extra cost! Route cancelled.");
-                return false;
-            }
+        // Add tunnel extra cost (calculated in Game class via live card drawing)
+        int totalCost = cost + extraTunnelCost;
+        
+        // Check if player can still afford after tunnel cost
+        if (extraTunnelCost > 0 && !canAffordRoute(colorToUse, totalCost, ferryCount)) {
+            return new RouteBuildResult(false, "Cannot afford tunnel extra cost! Need " + totalCost + " cards but only have " + (getCardCount(colorToUse) + getCardCount(Color.MULTICOLOR)), 0, trains, extraTunnelCost);
         }
 
         // Validate train count
         if (totalCost > this.trains) {
-            System.out.println("Not enough trains! Need " + cost + ", have " + trains);
-            return false;
+            return new RouteBuildResult(false, "Not enough trains! Need " + totalCost + ", have " + trains, 0, trains, extraTunnelCost);
+        }
+
+        // Validate player has enough cards
+        if (!canAffordRoute(colorToUse, totalCost, ferryCount)) {
+            return new RouteBuildResult(false, "Not enough cards! Need " + totalCost + " " + colorToUse.toDisplayString() + " cards (with at least " + ferryCount + " wildcards)", 0, trains, extraTunnelCost);
         }
 
         // Play the cards
@@ -302,25 +275,34 @@ public class Player {
 
         // Claim the route
         gameMap.claimRoute(city1, city2, playerId);
-        this.trains -= cost;
+        this.trains -= totalCost;
 
         // Award points
         this.points += pointsEarned;
         // checkTrainCount(); //TODO: Implement when game driver is implemented
 
-        System.out.println("Route claimed! Earned " + pointsEarned + " points. Trains remaining: " + trains);
-        return true;
+        return new RouteBuildResult(true, null, pointsEarned, trains, extraTunnelCost);
     }
 
-    public boolean destinationCardCompleted(DestinationCard destinationCard) {
+    /**
+     * Checks if a destination card is completed and awards points if so.
+     * Game class should display the message about completion.
+     * @param destinationCard The destination card to check
+     * @return Points earned (0 if not completed or already awarded, positive if newly completed)
+     */
+    public int checkDestinationCardCompleted(DestinationCard destinationCard) {
+        // Skip if already completed and points awarded
+        if (destinationCard.isCompleted()) {
+            return 0;
+        }
+        
         boolean completed = gameMap.destinationCardCompleted(destinationCard.getCity1(), destinationCard.getCity2(), playerId);
         if (completed) {
-            System.out.println("Destination card completed! Earned " + destinationCard.getPoints() + " points.");
-            points += destinationCard.getPoints();
+            int pointsEarned = destinationCard.getPoints();
+            points += pointsEarned;
+            destinationCard.setCompleted(true); // Mark as completed to prevent duplicate awards
+            return pointsEarned;
         }
-
-        return completed;
+        return 0;
     }
-
-
 }

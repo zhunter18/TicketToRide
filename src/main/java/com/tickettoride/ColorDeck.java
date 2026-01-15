@@ -1,10 +1,7 @@
 package com.tickettoride;
 
 import java.util.Collections;
-import com.tickettoride.Deck;
-import com.tickettoride.Card;
-import com.tickettoride.Color;
-import com.tickettoride.ColorCard;
+
 
 public class ColorDeck extends Deck {
 
@@ -57,6 +54,22 @@ public class ColorDeck extends Deck {
     public ColorCard drawMystery(String playerId) {
         ColorCard temp = (ColorCard) cards.removeFirst();
         temp.setLocation("HAND", playerId);
+
+        if (cards.size() <= 20) { // Boolean to make sure the deck is shuffled when it is less than 20 cards
+            super.shuffle();
+        }
+
+        return temp;
+    }
+
+    /**
+     * Draws a mystery card directly to discard pile (for tunnel draws)
+     * @return The drawn ColorCard (already in discard pile)
+     */
+    public ColorCard drawMysteryToDiscard() {
+        ColorCard temp = (ColorCard) cards.removeFirst();
+        temp.setLocation("DISCARD");
+        discardPile.add(temp);
 
         if (cards.size() <= 20) { // Boolean to make sure the deck is shuffled when it is less than 20 cards
             super.shuffle();
@@ -143,5 +156,13 @@ public class ColorDeck extends Deck {
             super.shuffle();
         }
 
+    }
+
+    /**
+     * Get the visible cards array (for UI display)
+     * @return Array of 5 visible cards (may contain nulls)
+     */
+    public Card[] getVisibleCards() {
+        return visibleCards;
     }
 }
